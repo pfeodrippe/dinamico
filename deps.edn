@@ -1,0 +1,10 @@
+{:deps
+ {clj-http/clj-http {:mvn/version "3.12.3"}
+  metosin/malli {:mvn/version "0.8.4"}
+  metosin/jsonista {:mvn/version "0.3.5"}}
+
+ :build {:deps {io.github.seancorfield/build-clj
+                {:git/tag "v0.8.0" :git/sha "9bd8b8a"}}
+         :ns-default build}
+
+ :paths ["src" "resources"]}
