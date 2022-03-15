@@ -1,3 +1,5 @@
+[![Clojars Project](https://img.shields.io/clojars/v/io.github.pfeodrippe/dinamico.svg)](https://clojars.org/io.github.pfeodrippe/dinamico)
+
 # Dinâmico
 
 Wrapper over the
@@ -90,8 +92,8 @@ code as
     (dn/center
      (dn/column
       {:mainAxisAlignment :center}
-      [(dn/asset-image {:name "images/id-card/id-card-front.png"})
-       (dn/asset-image {:name "images/id-card/id-card-back.png"})]))}))
+      [(dn/asset-image {:name "images/card/card-front.png"})
+       (dn/asset-image {:name "images/card/card-back.png"})]))}))
 ```
 
 It seems almost the same, but the good thing is that now things are
