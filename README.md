@@ -200,9 +200,14 @@ Then the server code can be
     (dn/center
      (dn/column
       {:mainAxisAlignment :center}
-      ;; We assume that you have these images on your flutter repo.
-      [(dn/asset-image {:name "images/card/card-front.png"})
-       (dn/asset-image {:name "images/card/card-back.png"})]))}))
+      (dn/container
+       {:height 200}
+       (dn/list-view
+        {:scrollDirection :horizontal}
+        [(dn/container {:width 160 :color "#FF00FF"})
+         (dn/container {:width 160 :color "#FF0000"})
+         (dn/container {:width 160 :color "#FFFF00"})
+         (dn/text {:text "Eita"})]))))}))
 
 (defn flutter-app-get
   [_]
