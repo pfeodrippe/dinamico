@@ -351,25 +351,33 @@
   it's a `ref`, e.g. `(-doc column :mainAxisAlignment)`."
   ([f]
    (::schema (meta f)))
-  ([f opt-k]
-   (let [registry (:registry (m/properties (::schema (meta f))))
-         options (m/options (::schema (meta f)))
-         value (->> (m/ast (::schema (meta f)))
-                    :child
-                    :keys
-                    opt-k
-                    :value)]
-     (-> (walk/postwalk (fn [v]
-                         (if (and (map? v)
-                                  (= (:type v) :ref))
-                           (let [sch (get registry (:value v))
-                                 options' (m/options sch)]
-                             (m/ast (get registry (:value v)) options'))
-                           v))
-                        value)
-         (m/from-ast options)
-         pr-str
-         edn/read-string))))
+  ([f-or-schema & opt-ks]
+   (let [schema (if (m/schema? f-or-schema)
+                  f-or-schema
+                  (::schema (meta f-or-schema)))
+         registry (:registry (m/properties schema))
+         options (m/options schema)
+         value (-> (m/ast schema)
+                   :child
+                   :keys
+                   ((first opt-ks))
+                   :value)
+         sch-of-interest* (atom nil)
+         sch (-> (walk/postwalk (fn [v]
+                                  (if (and (map? v)
+                                           (= (:type v) :ref))
+                                    (let [sch (get registry (:value v))
+                                          options' (m/options sch)]
+                                      (reset! sch-of-interest* sch)
+                                      (m/ast sch options'))
+                                    v))
+                                value)
+                 (m/from-ast options))]
+     (if-let [rest-ks (next opt-ks)]
+       (apply -doc @sch-of-interest* rest-ks)
+       (-> sch
+           pr-str
+           edn/read-string)))))
 
 (doseq [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
                       (into (sorted-map))

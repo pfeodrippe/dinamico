@@ -143,6 +143,12 @@ the 2-arity version of `dn/-doc`.
 [:schema
  {:registry {}}
  [:enum :center :end :spaceAround :spaceBetween :spaceEvenly :start]]
+
+;; It also accepts nested keys (best effort)!
+(-dn/doc dn/decorated-box :decoration :boxShadow :blurStyle)
+
+;; =>
+[:schema {:registry {}} [:enum :inner :normal :outer :solid]]
 ```
 
 ## Usage
