@@ -404,8 +404,7 @@
                          ([opts child-or-children]
                           (with-meta (merge {:type op :args opts}
                                             (when (seq child-or-children)
-                                              {:children (if (or (vector? child-or-children)
-                                                                 (list? child-or-children))
+                                              {:children (if (sequential? child-or-children)
                                                            child-or-children
                                                            [child-or-children])}))
                             {::component true})))
