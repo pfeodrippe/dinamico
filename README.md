@@ -204,10 +204,10 @@ Then the server code can be
        {:height 200}
        (dn/list-view
         {:scrollDirection :horizontal}
-        [(dn/container {:width 160 :color "#FF00FF"})
-         (dn/container {:width 160 :color "#FF0000"})
-         (dn/container {:width 160 :color "#FFFF00"})
-         (dn/text {:text "Eita"})]))))}))
+        (concat
+         (->> ["#FF00FF" "#FF0000" "#FFFF00"]
+              (mapv #(dn/container {:width 160 :color %})))
+         [(dn/text {:text "Eita"})])))))}))
 
 (defn flutter-app-get
   [_]
