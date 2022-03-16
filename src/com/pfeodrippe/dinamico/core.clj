@@ -3,14 +3,14 @@
   (:refer-clojure :exclude [comment])
   (:require
    [clj-http.client :as http]
-   [jsonista.core :as json]
-
-   [malli.core :as m]
-   [malli.util :as mu]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]
    [clojure.set :as set]
    [clojure.string :as str]
-   [clojure.edn :as edn]
-   [clojure.walk :as walk]))
+   [clojure.walk :as walk]
+   [jsonista.core :as json]
+   [malli.core :as m]
+   [malli.util :as mu]))
 
 (def ^:private schema-names
   "From https://github.com/peiffer-innovations/json_dynamic_widget/tree/main/lib/src/schema/schemas."
@@ -353,22 +353,25 @@
    (::schema (meta f)))
   ([f opt-k]
    (let [registry (:registry (m/properties (::schema (meta f))))
+         options (m/options (::schema (meta f)))
          value (->> (m/ast (::schema (meta f)))
                     :child
                     :keys
                     opt-k
                     :value)]
-     (-> (walk/prewalk (fn [v]
+     (-> (walk/postwalk (fn [v]
                          (if (and (map? v)
                                   (= (:type v) :ref))
-                           (m/ast (get registry (:value v)))
+                           (let [sch (get registry (:value v))
+                                 options' (m/options sch)]
+                             (m/ast (get registry (:value v)) options'))
                            v))
-                       value)
-         (m/from-ast (m/options (::schema (meta f))))
+                        value)
+         (m/from-ast options)
          pr-str
          edn/read-string))))
 
-(doseq [[op sch] (->> (edn/read-string (slurp "resources/schemas.edn"))
+(doseq [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
                       (into (sorted-map))
                       (remove (comp ::error val)))]
   (let [ks (->> (m/ast sch)
@@ -409,7 +412,7 @@
          (mapv schema-name->malli)
          (into (sorted-map))))
 
-  (spit "resources/schemas.edn"
+  (spit "resources/com/pfeodrippe/dinamico/schemas.edn"
         schemas)
 
   (->> schemas
