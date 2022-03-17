@@ -39,7 +39,7 @@ class _DynamicTextState extends State<DynamicText> {
     controller = StreamController<http.Response>(
       onListen: () async {
         while (true) {
-          await Future<void>.delayed(const Duration(seconds: 1));
+          await Future<void>.delayed(const Duration(milliseconds: 200));
           var response =
               await http.get(Uri.parse('http://localhost:3001/flutter-app'));
           if (!_hasLastResponse || _lastResponse.body != response.body) {
