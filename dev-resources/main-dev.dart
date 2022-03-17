@@ -32,21 +32,30 @@ class DynamicText extends StatefulWidget {
 }
 
 class _DynamicTextState extends State<DynamicText> {
-  @override
-  void initState() {
-    super.initState();
-
-    // This help us with hot reload, REMOVE this when publishing.
-    Timer.periodic(const Duration(milliseconds: 200), (Timer t) {
-      setState(() {
-        DateTime.now().second.toString();
-      });
-    });
-  }
+  final Stream<http.Response> _response = (() {
+    late final StreamController<http.Response> controller;
+    late http.Response _lastResponse;
+    bool _hasLastResponse = false;
+    controller = StreamController<http.Response>(
+      onListen: () async {
+        while (true) {
+          await Future<void>.delayed(const Duration(seconds: 1));
+          var response =
+              await http.get(Uri.parse('http://localhost:3001/flutter-app'));
+          if (!_hasLastResponse || _lastResponse.body != response.body) {
+            controller.add(response);
+            _hasLastResponse = true;
+            _lastResponse = response;
+          }
+        }
+      },
+    );
+    return controller.stream;
+  })();
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
+    return StreamBuilder(
       builder: (context, AsyncSnapshot<http.Response> snapshot) {
         var body = snapshot.data?.body;
         if (snapshot.hasData && body != null) {
@@ -71,11 +80,7 @@ class _DynamicTextState extends State<DynamicText> {
           );
         }
       },
-      future: _getWidget(),
+      stream: _response,
     );
-  }
-
-  Future<http.Response> _getWidget() async {
-    return http.get(Uri.parse(widget.url));
   }
 }
