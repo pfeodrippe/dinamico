@@ -201,13 +201,20 @@ Then the server code can be
      (dn/column
       {:mainAxisAlignment :center}
       (dn/container
-       {:height 200}
-       (dn/list-view
-        {:scrollDirection :horizontal}
-        (concat
-         (->> ["#FF00FF" "#FF0000" "#FFFF00"]
-              (mapv #(dn/container {:width 160 :color %})))
-         [(dn/text {:text "Eita"})])))))}))
+       {:height 500}
+       [(dn/list-view
+         {:scrollDirection :horizontal}
+         (concat
+          [(dn/elevated-button
+            {:style {:foregroundColor {:pressed "FF2196F3"
+                                       :focused "FF2196F3"
+                                       :empty "FFF44336"}}
+             :onPressed "${simplePrintMessage('olha')}"}
+            (dn/text {:text "Button"}))]
+          (->> ["#FF00FF" "#FFFF00"]
+               (mapv #(dn/container {:width 160 :color %})))
+          [(dn/text {:text "Eita"})
+           (dn/container {:width 160 :color #"FF0000"})]))])))}))
 
 (defn flutter-app-get
   [_]

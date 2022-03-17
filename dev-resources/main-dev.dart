@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:json_dynamic_widget/json_dynamic_widget.dart';
 import 'dart:async';
 
+var registry = JsonWidgetRegistry.instance;
+
 void main() {
   runApp(const MyApp());
 }
@@ -38,6 +40,19 @@ class _DynamicTextState extends State<DynamicText> {
     bool _hasLastResponse = false;
     controller = StreamController<http.Response>(
       onListen: () async {
+        registry.registerFunctions({
+          'simplePrintMessage': ({args, required registry}) => () {
+                var message = 'This is a simple print message';
+                if (args?.isEmpty == false) {
+                  for (var arg in args!) {
+                    message += ' $arg';
+                  }
+                }
+                // ignore: avoid_print
+                print(message);
+              },
+        });
+
         while (true) {
           await Future<void>.delayed(const Duration(milliseconds: 200));
           var response =
