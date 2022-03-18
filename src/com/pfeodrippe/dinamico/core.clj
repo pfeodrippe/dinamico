@@ -379,6 +379,41 @@
            pr-str
            edn/read-string)))))
 
+(def ^:private ns-str
+  (str *ns*))
+
+(defn -builder
+  "Builds the component returning a function which can be used
+  for custom components."
+  [op]
+  (fn component
+    ([]
+     (component {} []))
+    ([opts-or-children]
+     (if (and (map? opts-or-children)
+              (not (::component (meta opts-or-children))))
+       (component opts-or-children nil)
+       (component {} opts-or-children)))
+    ([opts child-or-children]
+     (let [namespaced-opts (->> opts
+                                (filter (comp #{ns-str} namespace key))
+                                (mapv (fn [[k v]]
+                                        [(keyword (name k))
+                                         v]))
+                                (into {}))]
+       (-> (merge {:type op}
+                  (when (seq namespaced-opts)
+                    namespaced-opts)
+                  (when (seq opts)
+                    {:args (->> opts
+                                (remove (comp #{ns-str} namespace key))
+                                (into {}))})
+                  (when (seq child-or-children)
+                    {:children (if (sequential? child-or-children)
+                                 child-or-children
+                                 [child-or-children])}))
+           (with-meta {::component true}))))))
+
 (doseq [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
                       (into (sorted-map))
                       (remove (comp ::error val)))]
@@ -387,8 +422,7 @@
                 :keys
                 keys
                 sort
-                (mapv symbol))
-        ns-str (str *ns*)]
+                (mapv symbol))]
     (intern *ns* (with-meta (symbol (str/replace (name op) #"_" "-"))
                    {::schema sch
                     :arglists (list []
@@ -397,34 +431,7 @@
                                        {:keys ks}
                                        'opts)
                                      'child-or-children])})
-            (-> (fn component
-                  ([]
-                   (component {} []))
-                  ([opts-or-children]
-                   (if (and (map? opts-or-children)
-                            (not (::component (meta opts-or-children))))
-                     (component opts-or-children nil)
-                     (component {} opts-or-children)))
-                  ([opts child-or-children]
-                   (let [namespaced-opts (->> opts
-                                              (filter (comp #{ns-str} namespace key))
-                                              (mapv (fn [[k v]]
-                                                      [(keyword (name k))
-                                                       v]))
-                                              (into {}))]
-                     (-> (merge {:type op}
-                                (when (seq namespaced-opts)
-                                  namespaced-opts)
-                                (when (seq opts)
-                                  {:args (->> opts
-                                              (remove (comp #{ns-str} namespace key))
-                                              (into {}))})
-                                (when (seq child-or-children)
-                                  {:children (if (sequential? child-or-children)
-                                               child-or-children
-                                               [child-or-children])}))
-                         (with-meta {::component true})))))
-                (with-meta {::schema sch})))))
+            (with-meta (-builder op) {::schema sch}))))
 
 (clojure.core/comment
 

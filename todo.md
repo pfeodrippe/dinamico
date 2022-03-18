@@ -7,3 +7,6 @@
 - [ ] Option to validate data on input (for development only)
 - [ ] Integrate with clj-kondo
 - [ ] Create schema in Malli and generate the dart schema file from it
+- [ ] Show "Server not connected" message when example cannot fetch
+      data
+- [ ] Fetch other important data dynamically? E.g. icons, colors
