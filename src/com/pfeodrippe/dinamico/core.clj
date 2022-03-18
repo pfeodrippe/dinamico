@@ -402,7 +402,8 @@
                             (component opts-or-children nil)
                             (component {} opts-or-children)))
                          ([opts child-or-children]
-                          (with-meta (merge {:type op :args opts}
+                          (with-meta (merge {:type op}
+                                            (when (seq opts) {:args opts})
                                             (when (seq child-or-children)
                                               {:children (if (sequential? child-or-children)
                                                            child-or-children
