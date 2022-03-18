@@ -390,12 +390,15 @@
                 (mapv symbol))]
     (intern *ns* (with-meta (symbol (str/replace (name op) #"_" "-"))
                    {::schema sch
-                    :arglists (list '[opts-child-or-children]
+                    :arglists (list []
+                                    '[opts-child-or-children]
                                     [(if (seq ks)
                                        {:keys ks}
                                        'opts)
                                      'child-or-children])})
             (with-meta (fn component
+                         ([]
+                          (component {} []))
                          ([opts-or-children]
                           (if (and (map? opts-or-children)
                                    (not (::component (meta opts-or-children))))
