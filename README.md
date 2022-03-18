@@ -193,6 +193,41 @@ Then the server code can be
   {:status 200
    :body m})
 
+(defn- bars
+  []
+  (dn/container
+   {:height 500}
+   [(dn/list-view
+     {:scrollDirection :horizontal}
+     (concat
+      [(dn/elevated-button
+        {:style {:foregroundColor {:pressed "FF2196F3"
+                                   :focused "FF2196F3"
+                                   :empty "FFF44336"}}
+         :onPressed "${simplePrintMessage('olha')}"}
+        (dn/text {:text "Button"}))]
+      (->> ["#FF00FF" "#FFFF00"]
+           (mapv #(dn/container {:width 160 :color %})))
+      [(dn/text {:text "Eita"})
+       (dn/container {:width 160 :color #"FF0000"})]))]))
+
+(defn- input
+  []
+  (dn/material
+   (dn/center
+    (dn/padding
+     {:padding [50 0 50 0]}
+     (dn/text-form-field
+      {::dn/id :text-1
+       :decoration
+       {:suffixIcon
+        (dn/icon-button
+         {:icon (dn/icon
+                 {:icon {:codePoint 57704
+                         :fontFamily "MaterialIcons"
+                         :size 50}})
+          :onPressed "${set_value('text-1','')}"})}})))))
+
 (defn flutter-app
   []
   (dn/scaffold
@@ -200,21 +235,8 @@ Then the server code can be
     (dn/center
      (dn/column
       {:mainAxisAlignment :center}
-      (dn/container
-       {:height 500}
-       [(dn/list-view
-         {:scrollDirection :horizontal}
-         (concat
-          [(dn/elevated-button
-            {:style {:foregroundColor {:pressed "FF2196F3"
-                                       :focused "FF2196F3"
-                                       :empty "FFF44336"}}
-             :onPressed "${simplePrintMessage('olha')}"}
-            (dn/text {:text "Button"}))]
-          (->> ["#FF00FF" "#FFFF00"]
-               (mapv #(dn/container {:width 160 :color %})))
-          [(dn/text {:text "Eita"})
-           (dn/container {:width 160 :color #"FF0000"})]))])))}))
+      [(bars)
+       (input)]))}))
 
 (defn flutter-app-get
   [_]
@@ -249,6 +271,12 @@ Then the server code can be
 (def server (run-server (app {}) {:join? false
                                   :port 3001}))
 ```
+
+See above that we use `::dn/id` to set a id for the input, which we
+refer and erase erased when you press the `icon-button` (which is a
+`x`). You can use the same approach for any other top-level option
+which `json_dynamic_widget` accepts (e.g. `::dn/id` for `id` as you
+have seen or `::dn/listen` for `listen`).
 
 Start your REPL and hot reload as you do in Clojure (for development
 purposes, the mobile app should be fetching the dynamic widget every
