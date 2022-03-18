@@ -387,7 +387,8 @@
                 :keys
                 keys
                 sort
-                (mapv symbol))]
+                (mapv symbol))
+        ns-str (str *ns*)]
     (intern *ns* (with-meta (symbol (str/replace (name op) #"_" "-"))
                    {::schema sch
                     :arglists (list []
@@ -396,23 +397,34 @@
                                        {:keys ks}
                                        'opts)
                                      'child-or-children])})
-            (with-meta (fn component
-                         ([]
-                          (component {} []))
-                         ([opts-or-children]
-                          (if (and (map? opts-or-children)
-                                   (not (::component (meta opts-or-children))))
-                            (component opts-or-children nil)
-                            (component {} opts-or-children)))
-                         ([opts child-or-children]
-                          (with-meta (merge {:type op}
-                                            (when (seq opts) {:args opts})
-                                            (when (seq child-or-children)
-                                              {:children (if (sequential? child-or-children)
-                                                           child-or-children
-                                                           [child-or-children])}))
-                            {::component true})))
-              {::schema sch}))))
+            (-> (fn component
+                  ([]
+                   (component {} []))
+                  ([opts-or-children]
+                   (if (and (map? opts-or-children)
+                            (not (::component (meta opts-or-children))))
+                     (component opts-or-children nil)
+                     (component {} opts-or-children)))
+                  ([opts child-or-children]
+                   (let [namespaced-opts (->> opts
+                                              (filter (comp #{ns-str} namespace key))
+                                              (mapv (fn [[k v]]
+                                                      [(keyword (name k))
+                                                       v]))
+                                              (into {}))]
+                     (-> (merge {:type op}
+                                (when (seq namespaced-opts)
+                                  namespaced-opts)
+                                (when (seq opts)
+                                  {:args (->> opts
+                                              (remove (comp #{ns-str} namespace key))
+                                              (into {}))})
+                                (when (seq child-or-children)
+                                  {:children (if (sequential? child-or-children)
+                                               child-or-children
+                                               [child-or-children])}))
+                         (with-meta {::component true})))))
+                (with-meta {::schema sch})))))
 
 (clojure.core/comment
 
