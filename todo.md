@@ -6,3 +6,4 @@
 - [ ] Present docs in a nicer way
 - [ ] Option to validate data on input (for development only)
 - [ ] Integrate with clj-kondo
+- [ ] Create schema in Malli and generate the dart schema file from it
