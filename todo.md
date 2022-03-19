@@ -10,3 +10,5 @@
 - [ ] Show "Server not connected" message when example cannot fetch
       data
 - [ ] Fetch other important data dynamically? E.g. icons, colors
+- [ ] Helper to set default values
+- [ ] Interpreter for mobile code
