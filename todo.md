@@ -3,6 +3,8 @@
 - [x] Convert these schemas to Malli
 - [x] Create functions out of it
 - [ ] Helper for HTTP requests
+- [ ] Set value from an action
+- [ ] Set page from an action
 - [ ] Use `tap>` to show docs?
 - [ ] Present docs in a nicer way
 - [ ] Option to validate data on input (for development only)
@@ -16,3 +18,14 @@
 - [ ] State management
 - [ ] Testing
 - [ ] Fix `text_form_field`
+- [ ] Make errors just show up on the screen instead of having an
+      exception?
+- [ ] Create skeleton mobile app
+- [ ] Create dart library
+
+## Ideas
+- [ ] iPad app where people can design their apps for Dinâmico
+
+
+## Teaching
+- [ ] Maybe write a book using https://docs.racket-lang.org/pollen/ ?
