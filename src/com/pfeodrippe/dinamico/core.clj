@@ -414,6 +414,9 @@
                                  [child-or-children])}))
            (with-meta {::component true}))))))
 
+(def svg (-builder :svg))
+(def material-icon (-builder :material_icon))
+
 (doseq [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
                       (into (sorted-map))
                       (remove (comp ::error val)))]

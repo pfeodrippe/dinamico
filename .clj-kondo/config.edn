@@ -1,0 +1,3 @@
+{:hooks
+ {:macroexpand
+  {dinamico.helper/with-action dinamico.helper/with-action}}}
