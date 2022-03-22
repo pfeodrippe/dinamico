@@ -5,7 +5,9 @@
 - [x] Create dart library
 - [x] Helper for HTTP requests
 - [x] Set value from an action
-- [ ] Set page from an action
+- [x] Set page from an action
+- [ ] Interpreter for mobile code using SCI
+  - [ ] Use re-frame? Fulcro approach?
 - [ ] Create skeleton mobile app
 - [ ] Use `tap>` to show docs?
 - [ ] Present docs in a nicer way
@@ -16,16 +18,16 @@
       data
 - [ ] Fetch other important data dynamically? E.g. icons, colors
 - [ ] Helper to set default values
-- [ ] Interpreter for mobile code
 - [ ] State management?
 - [ ] Testing
-- [ ] Fix `text_form_field`
+- [x] Fix `text_form_field`
 - [ ] Make errors just show up on the screen instead of having an
       exception?
 
 ## Ideas
-- [ ] iPad app where people can design their apps for Dinâmico
-
+- [ ] App where people can design their apps for Dinâmico
+- [ ] Digital storybook app
+- [ ] App to teach TLA+ model thinking
 
 ## Teaching
 - [ ] Maybe write a book using https://docs.racket-lang.org/pollen/ ?
