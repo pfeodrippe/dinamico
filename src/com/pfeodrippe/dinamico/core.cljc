@@ -1,16 +1,26 @@
 (ns com.pfeodrippe.dinamico.core
   "Code to parse based on https://github.com/metosin/malli/pull/211/files."
   (:refer-clojure :exclude [comment])
-  (:require
-   [clj-http.client :as http]
-   [clojure.edn :as edn]
-   [clojure.java.io :as io]
-   [clojure.set :as set]
-   [clojure.string :as str]
-   [clojure.walk :as walk]
-   [jsonista.core :as json]
-   [malli.core :as m]
-   [malli.util :as mu]))
+  #?(:cljs (:require-macros [com.pfeodrippe.dinamico.core]))
+  #?(:clj
+     (:require
+      [clj-http.client :as http]
+      [clojure.edn :as edn]
+      [clojure.java.io :as io]
+      [clojure.set :as set]
+      [clojure.string :as str]
+      [clojure.walk :as walk]
+      [jsonista.core :as json]
+      [malli.core :as m]
+      [malli.util :as mu]))
+  #?(:cljs
+     (:require
+      [clojure.edn :as edn]
+      [clojure.set :as set]
+      [clojure.string :as str]
+      [clojure.walk :as walk]
+      [malli.core :as m]
+      [malli.util :as mu])))
 
 (def ^:private schema-names
   "From https://github.com/peiffer-innovations/json_dynamic_widget/tree/main/lib/src/schema/schemas."
@@ -260,8 +270,10 @@
                      maxLength (assoc :max maxLength))]))
 
 (defmethod -type->malli "integer" [{:keys [minimum maximum exclusiveMinimum exclusiveMaximum multipleOf]
-                                   :or {minimum Integer/MIN_VALUE
-                                        maximum Integer/MAX_VALUE}}]
+                                    :or {minimum #?(:clj Integer/MIN_VALUE
+                                                    :cljs js/Number.MIN_SAFE_INTEGER)
+                                         maximum #?(:clj Integer/MAX_VALUE
+                                                    :cljs js/Number.MAX_SAFE_INTEGER)}}]
   ;; On draft 4, exclusive{Minimum,Maximum} is a boolean.
   ;; TODO Decide on whether draft 4 will be supported
   ;; TODO Implement exclusive{Minimum,Maximum} support
@@ -287,62 +299,64 @@
                                        :else (throw (ex-info "Not Supported" {:json-schema p
                                                                               :reason ::array-items})))))
 
-(defn- fetch-schema*
-  [url-or-schema-name]
-  (println "Fetching" url-or-schema-name "...")
-  (let [response (http/request {:url (if (str/starts-with? url-or-schema-name "https")
-                                       url-or-schema-name
-                                       (format "https://peiffer-innovations.github.io/flutter_json_schemas/schemas/json_dynamic_widget/%s.json"
-                                               (name url-or-schema-name)))
-                                :method :get
-                                :throw-exceptions false})]
-    (if (> (:status response) 299)
-      {::error (if (= (:status response) 404)
-                 ::error.not-found
-                 response)}
-      (-> response
-          (update :body #(json/read-value % (json/object-mapper {:decode-key-fn keyword})))
-          :body))))
+#?(:clj
+   (do
+     (defn- fetch-schema*
+       [url-or-schema-name]
+       (println "Fetching" url-or-schema-name "...")
+       (let [response (http/request {:url (if (str/starts-with? url-or-schema-name "https")
+                                            url-or-schema-name
+                                            (format "https://peiffer-innovations.github.io/flutter_json_schemas/schemas/json_dynamic_widget/%s.json"
+                                                    (name url-or-schema-name)))
+                                     :method :get
+                                     :throw-exceptions false})]
+         (if (> (:status response) 299)
+           {::error (if (= (:status response) 404)
+                      ::error.not-found
+                      response)}
+           (-> response
+               (update :body #(json/read-value % (json/object-mapper {:decode-key-fn keyword})))
+               :body))))
 
-(defonce ^:private fetch-schema (memoize fetch-schema*))
+     (defonce ^:private fetch-schema (memoize fetch-schema*))
 
-(defn- json-schema-document->malli [{:keys [:$id] :as obj}]
-  (let [refs* (atom [])
-        _ (walk/prewalk (fn [v]
-                          (if (and (map-entry? v)
-                                   (= (key v) :$ref))
-                            (do (swap! refs* conj (val v))
-                                v)
-                            v))
-                        obj)
-        recursive? (contains? (set @refs*) $id)
-        definitions (->> @refs*
-                         (remove #{$id})
-                         (mapv (fn [ref-url]
-                                 [($ref ref-url)
-                                  (json-schema-document->malli (fetch-schema ref-url))]))
-                         (into {}))]
-    (binding [*registry* (merge *registry*
-                                {($ref (:$id obj)) :nil}
-                                definitions)]
-      (if recursive?
-        (-> [:schema {:registry (merge {($ref (:$id obj)) (schema->malli obj)}
-                                       definitions)}
-             ($ref (:$id obj))]
-            pr-str
-            edn/read-string)
-        (-> [:schema {:registry definitions}
-             (schema->malli obj)]
-            pr-str
-            edn/read-string)))))
+     (defn- json-schema-document->malli [{:keys [:$id] :as obj}]
+       (let [refs* (atom [])
+             _ (walk/prewalk (fn [v]
+                               (if (and (map-entry? v)
+                                        (= (key v) :$ref))
+                                 (do (swap! refs* conj (val v))
+                                     v)
+                                 v))
+                             obj)
+             recursive? (contains? (set @refs*) $id)
+             definitions (->> @refs*
+                              (remove #{$id})
+                              (mapv (fn [ref-url]
+                                      [($ref ref-url)
+                                       (json-schema-document->malli (fetch-schema ref-url))]))
+                              (into {}))]
+         (binding [*registry* (merge *registry*
+                                     {($ref (:$id obj)) :nil}
+                                     definitions)]
+           (if recursive?
+             (-> [:schema {:registry (merge {($ref (:$id obj)) (schema->malli obj)}
+                                            definitions)}
+                  ($ref (:$id obj))]
+                 pr-str
+                 edn/read-string)
+             (-> [:schema {:registry definitions}
+                  (schema->malli obj)]
+                 pr-str
+                 edn/read-string)))))
 
-(defn- schema-name->malli
-  [schema-name]
-  (let [sch (fetch-schema schema-name)]
-    {schema-name
-     (if (::error sch)
-       sch
-       (json-schema-document->malli sch))}))
+     (defn- schema-name->malli
+       [schema-name]
+       (let [sch (fetch-schema schema-name)]
+         {schema-name
+          (if (::error sch)
+            sch
+            (json-schema-document->malli sch))}))))
 
 (defn -doc
   "Return schema (Malli format) for a function.
@@ -417,29 +431,48 @@
 (def svg (-builder :svg))
 (def material-icon (-builder :material_icon))
 
-(defmacro -intern-widgets
-  []
-  `(do
-     ~@(for [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
-                           (into (sorted-map))
-                           (remove (comp ::error val)))]
-         (let [ks (->> (m/ast sch)
-                       :child
-                       :keys
-                       keys
-                       sort
-                       (mapv symbol))]
-           `(def ~(with-meta (symbol (str/replace (name op) #"_" "-"))
-                    {::schema sch
-                     :arglists (list []
-                                     '[opts-child-or-children]
-                                     [(if (seq ks)
-                                        {:keys ks}
-                                        'opts)
-                                      'child-or-children])})
-              (with-meta (-builder ~op) {::schema ~sch}))))))
+#?(:clj
+   (defmacro -intern-widgets
+     []
+     `(do
+        ~@(for [[op sch] (->> (edn/read-string (slurp (io/resource "com/pfeodrippe/dinamico/schemas.edn")))
+                              (into (sorted-map))
+                              (remove (comp ::error val)))]
+            (let [ks (->> (m/ast sch)
+                          :child
+                          :keys
+                          keys
+                          sort
+                          (mapv symbol))]
+              `(def ~(with-meta (symbol (str/replace (name op) #"_" "-"))
+                       {::schema sch
+                        :arglists (list []
+                                        '[opts-child-or-children]
+                                        [(if (seq ks)
+                                           {:keys ks}
+                                           'opts)
+                                         'child-or-children])})
+                 (with-meta (-builder ~op) {::schema ~sch})))))))
 
-(-intern-widgets)
+(com.pfeodrippe.dinamico.core/-intern-widgets)
+
+#?(:cljs
+   (do
+     (defn main
+       []
+       (println "OHA"))
+
+     (defn start
+       "Hook to start. Also used as a hook for hot code reload."
+       []
+       (js/console.warn "start called")
+       (main))
+
+     (defn stop
+       "Hot code reload hook to shut down resources so hot code reload can work"
+       [_done]
+       (js/console.warn "stop called"))))
+
 
 (clojure.core/comment
 

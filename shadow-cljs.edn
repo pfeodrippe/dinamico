@@ -1,0 +1,20 @@
+{:source-paths ["src" "resources"]
+
+ :builds {:app {:target :node-script
+                :output-to "out/dinamico.js"
+                :main com.pfeodrippe.dinamico.core/main
+                :devtools {:before-load-async com.pfeodrippe.dinamico.core/stop
+                           :after-load com.pfeodrippe.dinamico.core/start}}
+          #_{:target :node-library
+             :output-to "out/dinamico.js"
+             :exports-var my-app.core/exported
+             :devtools {:before-load-async com.pfeodrippe.dinamico.core/stop
+                        :after-load com.pfeodrippe.dinamico.core/start}}}
+
+ :dependencies [[binaryage/devtools "0.9.11"]
+                [cider/cider-nrepl "0.25.0"]
+                [org.babashka/sci "0.3.2"]
+                [re-frame "1.2.0"]
+                [metosin/malli "0.8.4"]
+                [clj-http/clj-http "3.12.3"]
+                [metosin/jsonista "0.3.5"]]}
