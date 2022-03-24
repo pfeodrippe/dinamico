@@ -443,16 +443,19 @@
                           :keys
                           keys
                           sort
-                          (mapv symbol))]
-              `(def ~(with-meta (symbol (str/replace (name op) #"_" "-"))
-                       {::schema sch
-                        :arglists (list []
-                                        '[opts-child-or-children]
-                                        [(if (seq ks)
-                                           {:keys ks}
-                                           'opts)
-                                         'child-or-children])})
-                 (with-meta (-builder ~op) {::schema ~sch})))))))
+                          (mapv symbol))
+                  sym (symbol (str/replace (name op) #"_" "-"))
+                  arglists (list []
+                                 ['opts-child-or-children]
+                                 [(if (seq ks)
+                                    {:keys ks}
+                                    'opts)
+                                  'child-or-children])]
+              `(do
+                 (def ~(with-meta sym {::schema sch
+                                       :arglists `(quote ~arglists)})
+                   (with-meta (-builder ~op) {::schema ~sch}))
+                 (var ~sym)))))))
 
 (com.pfeodrippe.dinamico.core/-intern-widgets)
 
@@ -472,7 +475,6 @@
        "Hot code reload hook to shut down resources so hot code reload can work"
        [_done]
        (js/console.warn "stop called"))))
-
 
 (clojure.core/comment
 
