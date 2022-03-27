@@ -24,8 +24,14 @@
 - [ ] Make errors just show up on the screen instead of having an
       exception?
 
+## Pollen IDE (but using Clojure)
+- [ ] Automatic list identation
+- [ ] Live view (HTML or Flutter-like view? Maybe both)
+- [ ] Edit clojure inside editor
+- [ ] Autocompletion
+
 ## Ideas
-- [ ] App where people can design their apps for Dinâmico
+- [ ] App where people can design their apps for Dinâmico using Dinâmico
 - [ ] Digital storybook app
 - [ ] App to teach TLA+ model thinking
 
